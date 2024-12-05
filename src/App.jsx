@@ -8,10 +8,17 @@ import Modal from "./components/Modal.jsx";
 import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
 
+//to show the previously selected places when refreshing the page - getting it from ls
+//this is also a side effect - doesn't need the hook bc the code executes immediately
+const storedIds = JSON.parse(localStorage.getItem("selectedPlaces") || []);
+const storedPlaces = storedIds.map((id) =>
+  AVAILABLE_PLACES.find((place) => place.id === id)
+);
+
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
-  const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
   const [availablePlaces, setAvailablePlaces] = useState([]);
 
   useEffect(() => {
@@ -42,6 +49,16 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+
+    //ls only contains data in string format -> stringify = converts an array to string
+    //parse = from string to array
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || []; //get previously stored ids (if there are any)
+    if (storedIds.indexOf(id) === -1) {
+      localStorage.setItem(
+        "selectedPlaces",
+        JSON.stringify([id, ...storedIds])
+      ); //add the newly added place
+    }
   }
 
   function handleRemovePlace() {
@@ -49,6 +66,13 @@ function App() {
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
     modal.current.close();
+
+    //update the local storage so it gets rid of the removed place
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+    localStorage.setItem(
+      "selectedPlaces",
+      JSON.stringify(storedIds.filter((id) => id !== selectedPlace.current))
+    );
   }
 
   return (
